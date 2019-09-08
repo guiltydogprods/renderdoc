@@ -12594,6 +12594,14 @@ GLAPI void APIENTRY glReplacementCodeuiTexCoord2fColor4fNormal3fVertex3fvSUN (co
 #define GL_FOG_SPECULAR_TEXTURE_WIN       0x80EC
 #endif /* GL_WIN_specular_fog */
 
+#ifndef GL_RDOC_bindless_helper
+#define GL_RDOC_bindless_helper 1
+typedef void (APIENTRYP PFNGLSETHANDLERANGERDOCPROC) (GLuint buffer, GLuint64 offset, GLuint64 range);
+#ifdef GL_GLEXT_PROTOTYPES
+GLAPI void APIENTRY glSetHandleRangeRDOC (GLuint buffer, GLuint64 offset, GLuint64 range);
+#endif
+#endif /* GL_RDOC_bindless_helper */
+
 #ifdef __cplusplus
 }
 #endif

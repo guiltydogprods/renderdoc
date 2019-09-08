@@ -6636,6 +6636,231 @@ void WrappedOpenGL::glTextureFoveationParametersQCOM(GLuint texture, GLuint laye
 
 #pragma endregion
 
+template <typename SerialiserType>
+bool WrappedOpenGL::Serialise_glGetTextureHandleARB(SerialiserType &ser, GLuint textureHandle)
+{
+  SERIALISE_ELEMENT_LOCAL(texture, TextureRes(GetCtx(), textureHandle));
+  SERIALISE_ELEMENT_LOCAL(handle, GL.glGetTextureHandleARB(textureHandle));
+
+  SERIALISE_CHECK_READ_ERRORS();
+
+  if(IsReplayingAndReading())
+  {
+    ResourceId id = GetResourceManager()->GetID(texture);
+    GLuint64 replayHandle = GL.glGetTextureHandleARB(texture.name);
+    m_HandleRemap[handle] = replayHandle;
+    RDCDEBUG("Remapping handle %llx to %llx for texture %s", handle, m_HandleRemap[handle],
+             ToStr(id).c_str());
+
+    // make all textures resident unconditionally.
+    GL.glMakeTextureHandleResidentARB(replayHandle);
+
+    // TODO store replayHandle for looking up in UI
+    m_BindlessResources.insert(id);
+
+    AddResourceInitChunk(texture);
+  }
+
+  return true;
+}
+
+GLuint64 WrappedOpenGL::glGetTextureHandleARB(GLuint texture)
+{
+  GLuint64 ret;
+  SERIALISE_TIME_CALL(ret = GL.glGetTextureHandleARB(texture));
+
+  if(IsCaptureMode(m_State))
+  {
+    USE_SCRATCH_SERIALISER();
+    SCOPED_SERIALISE_CHUNK(gl_CurChunk);
+    Serialise_glGetTextureHandleARB(ser, texture);
+
+    GLResourceRecord *record = GetResourceManager()->GetResourceRecord(TextureRes(GetCtx(), texture));
+
+    record->AddChunk(scope.Get());
+  }
+
+  return ret;
+}
+
+template <typename SerialiserType>
+bool WrappedOpenGL::Serialise_glGetTextureSamplerHandleARB(SerialiserType &ser, GLuint textureHandle,
+                                                           GLuint samplerHandle)
+{
+  SERIALISE_ELEMENT_LOCAL(texture, TextureRes(GetCtx(), textureHandle));
+  SERIALISE_ELEMENT_LOCAL(sampler, SamplerRes(GetCtx(), samplerHandle));
+  SERIALISE_ELEMENT_LOCAL(handle, GL.glGetTextureSamplerHandleARB(textureHandle, samplerHandle));
+
+  SERIALISE_CHECK_READ_ERRORS();
+
+  if(IsReplayingAndReading())
+  {
+    ResourceId texId = GetResourceManager()->GetID(texture);
+    ResourceId sampId = GetResourceManager()->GetID(sampler);
+
+    GLuint64 replayHandle = GL.glGetTextureSamplerHandleARB(texture.name, sampler.name);
+    m_HandleRemap[handle] = replayHandle;
+    RDCDEBUG("Remapping handle %llx to %llx for texture %s and sampler %s", handle, replayHandle,
+             ToStr(texId).c_str(), ToStr(sampId).c_str());
+
+    // make all textures resident unconditionally.
+    GL.glMakeTextureHandleResidentARB(replayHandle);
+
+    // TODO store replayHandle for looking up in UI
+    m_BindlessResources.insert(texId);
+    m_BindlessResources.insert(sampId);
+
+    AddResourceInitChunk(texture);
+  }
+
+  return true;
+}
+
+GLuint64 WrappedOpenGL::glGetTextureSamplerHandleARB(GLuint texture, GLuint sampler)
+{
+  GLuint64 ret;
+  SERIALISE_TIME_CALL(ret = GL.glGetTextureSamplerHandleARB(texture, sampler));
+
+  if(IsCaptureMode(m_State))
+  {
+    USE_SCRATCH_SERIALISER();
+    SCOPED_SERIALISE_CHUNK(gl_CurChunk);
+    Serialise_glGetTextureSamplerHandleARB(ser, texture, sampler);
+
+    GLResourceRecord *record = GetResourceManager()->GetResourceRecord(TextureRes(GetCtx(), texture));
+
+    record->AddChunk(scope.Get());
+  }
+
+  return ret;
+}
+
+template <typename SerialiserType>
+bool WrappedOpenGL::Serialise_glGetImageHandleARB(SerialiserType &ser, GLuint textureHandle,
+                                                  GLint level, GLboolean layered, GLint layer,
+                                                  GLenum format)
+{
+  SERIALISE_ELEMENT_LOCAL(texture, TextureRes(GetCtx(), textureHandle));
+  SERIALISE_ELEMENT(level);
+  SERIALISE_ELEMENT(layered);
+  SERIALISE_ELEMENT(layer);
+  SERIALISE_ELEMENT(format);
+  SERIALISE_ELEMENT_LOCAL(handle,
+                          GL.glGetImageHandleARB(textureHandle, level, layered, layer, format));
+
+  SERIALISE_CHECK_READ_ERRORS();
+
+  if(IsReplayingAndReading())
+  {
+    ResourceId id = GetResourceManager()->GetID(texture);
+
+    GLuint64 replayHandle = GL.glGetImageHandleARB(texture.name, level, layered, layer, format);
+    m_HandleRemap[handle] = replayHandle;
+    RDCDEBUG("Remapping handle %llx to %llx for image %s level %i layer %i format %s", handle,
+             replayHandle, ToStr(id).c_str(), level, layer, ToStr(format).c_str());
+
+    // make all textures resident unconditionally. Just assume read/write
+    GL.glMakeImageHandleResidentARB(replayHandle, eGL_READ_WRITE);
+
+    // TODO store replayHandle for looking up in UI
+    m_BindlessResources.insert(id);
+
+    AddResourceInitChunk(texture);
+  }
+
+  return true;
+}
+
+GLuint64 WrappedOpenGL::glGetImageHandleARB(GLuint texture, GLint level, GLboolean layered,
+                                            GLint layer, GLenum format)
+{
+  GLuint64 ret;
+  SERIALISE_TIME_CALL(ret = GL.glGetImageHandleARB(texture, level, layered, layer, format));
+
+  if(IsCaptureMode(m_State))
+  {
+    USE_SCRATCH_SERIALISER();
+    SCOPED_SERIALISE_CHUNK(gl_CurChunk);
+    Serialise_glGetImageHandleARB(ser, texture, level, layered, layer, format);
+
+    GLResourceRecord *record = GetResourceManager()->GetResourceRecord(TextureRes(GetCtx(), texture));
+
+    record->AddChunk(scope.Get());
+  }
+
+  return ret;
+}
+
+void WrappedOpenGL::glMakeTextureHandleResidentARB(GLuint64 handle)
+{
+  return GL.glMakeTextureHandleResidentARB(handle);
+}
+
+void WrappedOpenGL::glMakeTextureHandleNonResidentARB(GLuint64 handle)
+{
+  return GL.glMakeTextureHandleNonResidentARB(handle);
+}
+
+void WrappedOpenGL::glMakeImageHandleResidentARB(GLuint64 handle, GLenum access)
+{
+  return GL.glMakeImageHandleResidentARB(handle, access);
+}
+
+void WrappedOpenGL::glMakeImageHandleNonResidentARB(GLuint64 handle)
+{
+  return GL.glMakeImageHandleNonResidentARB(handle);
+}
+
+template <typename SerialiserType>
+bool WrappedOpenGL::Serialise_glSetHandleRangeRDOC(SerialiserType &ser, GLuint bufferHandle,
+                                                   GLuint64 offset, GLuint64 range)
+{
+  SERIALISE_ELEMENT_LOCAL(buffer, BufferRes(GetCtx(), bufferHandle));
+  SERIALISE_ELEMENT(offset);
+  SERIALISE_ELEMENT(range);
+
+  SERIALISE_CHECK_READ_ERRORS();
+
+  if(IsReplayingAndReading())
+  {
+    uint64_t *ptr = (uint64_t *)GL.glMapNamedBufferRangeEXT(buffer.name, offset, range,
+                                                            GL_MAP_WRITE_BIT | GL_MAP_READ_BIT);
+
+    while(range >= 8)
+    {
+      auto it = m_HandleRemap.find(*ptr);
+      if(it != m_HandleRemap.end())
+        *ptr = it->second;
+      ptr++;
+      range -= 8;
+    }
+
+    GL.glUnmapNamedBufferEXT(buffer.name);
+  }
+
+  return true;
+}
+
+void WrappedOpenGL::glSetHandleRangeRDOC(GLuint buffer, GLuint64 offset, GLuint64 range)
+{
+  SERIALISE_TIME_CALL();
+
+  if(IsActiveCapturing(m_State))
+  {
+    USE_SCRATCH_SERIALISER();
+    SCOPED_SERIALISE_CHUNK(gl_CurChunk);
+    Serialise_glSetHandleRangeRDOC(ser, buffer, offset, range);
+
+    GetContextRecord()->AddChunk(scope.Get());
+
+    CaptureOptions opts = RenderDoc::Inst().GetCaptureOptions();
+    if(!opts.refAllResources)
+      RDCLOG("Forcing on ref all resources for use of ARB_bindless_texture");
+    opts.refAllResources = true;
+    RenderDoc::Inst().SetCaptureOptions(opts);
+  }
+}
+
 INSTANTIATE_FUNCTION_SERIALISED(void, glGenTextures, GLsizei n, GLuint *textures);
 INSTANTIATE_FUNCTION_SERIALISED(void, glCreateTextures, GLenum target, GLsizei n, GLuint *textures);
 INSTANTIATE_FUNCTION_SERIALISED(void, glBindTexture, GLenum target, GLuint texture);
@@ -6744,3 +6969,10 @@ INSTANTIATE_FUNCTION_SERIALISED(void, glTextureBufferEXT, GLuint texture, GLenum
 INSTANTIATE_FUNCTION_SERIALISED(void, glTextureFoveationParametersQCOM, GLuint texture,
                                 GLuint layer, GLuint focalPoint, GLfloat focalX, GLfloat focalY,
                                 GLfloat gainX, GLfloat gainY, GLfloat foveaArea);
+INSTANTIATE_FUNCTION_SERIALISED(GLuint64, glGetTextureHandleARB, GLuint texture);
+INSTANTIATE_FUNCTION_SERIALISED(GLuint64, glGetTextureSamplerHandleARB, GLuint texture,
+                                GLuint sampler);
+INSTANTIATE_FUNCTION_SERIALISED(GLuint64, glGetImageHandleARB, GLuint texture, GLint level,
+                                GLboolean layered, GLint layer, GLenum format);
+INSTANTIATE_FUNCTION_SERIALISED(void, glSetHandleRangeRDOC, GLuint buffer, GLuint64 offset,
+                                GLuint64 range);

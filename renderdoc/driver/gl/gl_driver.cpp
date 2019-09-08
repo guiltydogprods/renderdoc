@@ -256,6 +256,7 @@ void WrappedOpenGL::BuildGLExtensions()
   m_GLExtensions.push_back("GL_KHR_parallel_shader_compile");
   m_GLExtensions.push_back("GL_KHR_robustness");
   m_GLExtensions.push_back("GL_KHR_robust_buffer_access_behavior");
+  m_GLExtensions.push_back("GL_ARB_bindless_texture");
 
   // this WGL extension is advertised in the gl ext string instead of via the wgl ext string,
   // return it just in case anyone is checking for it via this place. On non-windows platforms
@@ -3933,6 +3934,14 @@ bool WrappedOpenGL::ProcessChunk(ReadSerialiser &ser, GLChunk chunk)
     case GLChunk::glPrimitiveBoundingBoxARB:
     case GLChunk::glPrimitiveBoundingBox:
       return Serialise_glPrimitiveBoundingBox(ser, 0, 0, 0, 0, 0, 0, 0, 0);
+
+    case GLChunk::glGetTextureHandleARB: return Serialise_glGetTextureHandleARB(ser, 0);
+    case GLChunk::glGetTextureSamplerHandleARB:
+      return Serialise_glGetTextureSamplerHandleARB(ser, 0, 0);
+    case GLChunk::glGetImageHandleARB:
+      return Serialise_glGetImageHandleARB(ser, 0, 0, GL_FALSE, 0, eGL_NONE);
+
+    case GLChunk::glSetHandleRangeRDOC: return Serialise_glSetHandleRangeRDOC(ser, 0, 0, 0);
 
     case GLChunk::glGenTextures: return Serialise_glGenTextures(ser, 0, 0);
     case GLChunk::glCreateTextures: return Serialise_glCreateTextures(ser, eGL_NONE, 0, 0);

@@ -2167,6 +2167,15 @@ enum class GLChunk : uint32_t
   glBlendEquationARB,
   glPrimitiveBoundingBoxARB,
 
+  glGetTextureHandleARB,
+  glGetTextureSamplerHandleARB,
+  glGetImageHandleARB,
+  glSetHandleRangeRDOC,
+  glMakeTextureHandleResidentARB,
+  glMakeTextureHandleNonResidentARB,
+  glMakeImageHandleResidentARB,
+  glMakeImageHandleNonResidentARB,
+
   Max,
 };
 

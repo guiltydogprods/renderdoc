@@ -720,6 +720,16 @@ struct GLDispatchTable
   PFNGLACQUIREKEYEDMUTEXWIN32EXTPROC glAcquireKeyedMutexWin32EXT;
   PFNGLRELEASEKEYEDMUTEXWIN32EXTPROC glReleaseKeyedMutexWin32EXT;
 
+  // ARB_bindless_texture
+  PFNGLGETTEXTUREHANDLEARBPROC glGetTextureHandleARB;
+  PFNGLGETTEXTURESAMPLERHANDLEARBPROC glGetTextureSamplerHandleARB;
+  PFNGLGETIMAGEHANDLEARBPROC glGetImageHandleARB;
+  PFNGLSETHANDLERANGERDOCPROC glSetHandleRangeRDOC;
+  PFNGLMAKETEXTUREHANDLERESIDENTARBPROC glMakeTextureHandleResidentARB;
+  PFNGLMAKETEXTUREHANDLENONRESIDENTARBPROC glMakeTextureHandleNonResidentARB;
+  PFNGLMAKEIMAGEHANDLERESIDENTARBPROC glMakeImageHandleResidentARB;
+  PFNGLMAKEIMAGEHANDLENONRESIDENTARBPROC glMakeImageHandleNonResidentARB;
+
   // EXT_direct_state_access below here. We only include the functions relevant for core 3.2+ GL,
   // not any functions for legacy functionality.
   //

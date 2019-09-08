@@ -1048,6 +1048,14 @@
   FUNC(glImportSemaphoreWin32NameEXT, glImportSemaphoreWin32NameEXT); \
   FUNC(glAcquireKeyedMutexWin32EXT, glAcquireKeyedMutexWin32EXT); \
   FUNC(glReleaseKeyedMutexWin32EXT, glReleaseKeyedMutexWin32EXT); \
+  FUNC(glGetTextureHandleARB, glGetTextureHandleARB); \
+  FUNC(glGetTextureSamplerHandleARB, glGetTextureSamplerHandleARB); \
+  FUNC(glGetImageHandleARB, glGetImageHandleARB); \
+  FUNC(glSetHandleRangeRDOC, glSetHandleRangeRDOC); \
+  FUNC(glMakeTextureHandleResidentARB, glMakeTextureHandleResidentARB); \
+  FUNC(glMakeTextureHandleNonResidentARB, glMakeTextureHandleNonResidentARB); \
+  FUNC(glMakeImageHandleResidentARB, glMakeImageHandleResidentARB); \
+  FUNC(glMakeImageHandleNonResidentARB, glMakeImageHandleNonResidentARB); \
   FUNC(glCompressedTextureImage1DEXT, glCompressedTextureImage1DEXT); \
   FUNC(glCompressedTextureImage2DEXT, glCompressedTextureImage2DEXT); \
   FUNC(glCompressedTextureImage3DEXT, glCompressedTextureImage3DEXT); \
@@ -2309,6 +2317,14 @@
   FuncWrapper3(void, glImportSemaphoreWin32NameEXT, GLuint, semaphore, GLenum, handleType, const void *, name); \
   FuncWrapper3(GLboolean, glAcquireKeyedMutexWin32EXT, GLuint, memory, GLuint64, key, GLuint, timeout); \
   FuncWrapper2(GLboolean, glReleaseKeyedMutexWin32EXT, GLuint, memory, GLuint64, key); \
+  FuncWrapper1(GLuint64, glGetTextureHandleARB, GLuint, texture); \
+  FuncWrapper2(GLuint64, glGetTextureSamplerHandleARB, GLuint, texture, GLuint, sampler); \
+  FuncWrapper5(GLuint64, glGetImageHandleARB, GLuint, texture, GLint, level, GLboolean, layered, GLint, layer, GLenum, format); \
+  FuncWrapper3(void, glSetHandleRangeRDOC, GLuint, buffer, GLuint64, offset, GLuint64, range); \
+  FuncWrapper1(void, glMakeTextureHandleResidentARB, GLuint64, handle); \
+  FuncWrapper1(void, glMakeTextureHandleNonResidentARB, GLuint64, handle); \
+  FuncWrapper2(void, glMakeImageHandleResidentARB, GLuint64, handle, GLenum, access); \
+  FuncWrapper1(void, glMakeImageHandleNonResidentARB, GLuint64, handle); \
   FuncWrapper8(void, glCompressedTextureImage1DEXT, GLuint, texture, GLenum, target, GLint, level, GLenum, internalformat, GLsizei, width, GLint, border, GLsizei, imageSize, const void *, bits); \
   FuncWrapper9(void, glCompressedTextureImage2DEXT, GLuint, texture, GLenum, target, GLint, level, GLenum, internalformat, GLsizei, width, GLsizei, height, GLint, border, GLsizei, imageSize, const void *, bits); \
   FuncWrapper10(void, glCompressedTextureImage3DEXT, GLuint, texture, GLenum, target, GLint, level, GLenum, internalformat, GLsizei, width, GLsizei, height, GLsizei, depth, GLint, border, GLsizei, imageSize, const void *, bits); \
@@ -3060,7 +3076,6 @@
   FUNC(glGetHistogramParameteriv); \
   FUNC(glGetHistogramParameterxvOES); \
   FUNC(glGetHistogram); \
-  FUNC(glGetImageHandleARB); \
   FUNC(glGetImageHandleNV); \
   FUNC(glGetImageTransformParameterfvHP); \
   FUNC(glGetImageTransformParameterivHP); \
@@ -3217,10 +3232,8 @@
   FUNC(glGetTexLevelParameterxvOES); \
   FUNC(glGetTexParameterPointervAPPLE); \
   FUNC(glGetTexParameterxvOES); \
-  FUNC(glGetTextureHandleARB); \
   FUNC(glGetTextureHandleIMG); \
   FUNC(glGetTextureHandleNV); \
-  FUNC(glGetTextureSamplerHandleARB); \
   FUNC(glGetTextureSamplerHandleIMG); \
   FUNC(glGetTextureSamplerHandleNV); \
   FUNC(glGetTrackMatrixivNV); \
@@ -3371,15 +3384,11 @@
   FUNC(glLockArraysEXT); \
   FUNC(glMakeBufferNonResidentNV); \
   FUNC(glMakeBufferResidentNV); \
-  FUNC(glMakeImageHandleNonResidentARB); \
   FUNC(glMakeImageHandleNonResidentNV); \
-  FUNC(glMakeImageHandleResidentARB); \
   FUNC(glMakeImageHandleResidentNV); \
   FUNC(glMakeNamedBufferNonResidentNV); \
   FUNC(glMakeNamedBufferResidentNV); \
-  FUNC(glMakeTextureHandleNonResidentARB); \
   FUNC(glMakeTextureHandleNonResidentNV); \
-  FUNC(glMakeTextureHandleResidentARB); \
   FUNC(glMakeTextureHandleResidentNV); \
   FUNC(glMap1d); \
   FUNC(glMap1f); \
@@ -4972,7 +4981,6 @@
   UnsupportedWrapper3(void, glGetHistogramParameteriv, GLenum, target, GLenum, pname, GLint *, params); \
   UnsupportedWrapper3(void, glGetHistogramParameterxvOES, GLenum, target, GLenum, pname, GLfixed *, params); \
   UnsupportedWrapper5(void, glGetHistogram, GLenum, target, GLboolean, reset, GLenum, format, GLenum, type, void *, values); \
-  UnsupportedWrapper5(GLuint64, glGetImageHandleARB, GLuint, texture, GLint, level, GLboolean, layered, GLint, layer, GLenum, format); \
   UnsupportedWrapper5(GLuint64, glGetImageHandleNV, GLuint, texture, GLint, level, GLboolean, layered, GLint, layer, GLenum, format); \
   UnsupportedWrapper3(void, glGetImageTransformParameterfvHP, GLenum, target, GLenum, pname, GLfloat *, params); \
   UnsupportedWrapper3(void, glGetImageTransformParameterivHP, GLenum, target, GLenum, pname, GLint *, params); \
@@ -5129,10 +5137,8 @@
   UnsupportedWrapper4(void, glGetTexLevelParameterxvOES, GLenum, target, GLint, level, GLenum, pname, GLfixed *, params); \
   UnsupportedWrapper3(void, glGetTexParameterPointervAPPLE, GLenum, target, GLenum, pname, void **, params); \
   UnsupportedWrapper3(void, glGetTexParameterxvOES, GLenum, target, GLenum, pname, GLfixed *, params); \
-  UnsupportedWrapper1(GLuint64, glGetTextureHandleARB, GLuint, texture); \
   UnsupportedWrapper1(GLuint64, glGetTextureHandleIMG, GLuint, texture); \
   UnsupportedWrapper1(GLuint64, glGetTextureHandleNV, GLuint, texture); \
-  UnsupportedWrapper2(GLuint64, glGetTextureSamplerHandleARB, GLuint, texture, GLuint, sampler); \
   UnsupportedWrapper2(GLuint64, glGetTextureSamplerHandleIMG, GLuint, texture, GLuint, sampler); \
   UnsupportedWrapper2(GLuint64, glGetTextureSamplerHandleNV, GLuint, texture, GLuint, sampler); \
   UnsupportedWrapper4(void, glGetTrackMatrixivNV, GLenum, target, GLuint, address, GLenum, pname, GLint *, params); \
@@ -5283,15 +5289,11 @@
   UnsupportedWrapper2(void, glLockArraysEXT, GLint, first, GLsizei, count); \
   UnsupportedWrapper1(void, glMakeBufferNonResidentNV, GLenum, target); \
   UnsupportedWrapper2(void, glMakeBufferResidentNV, GLenum, target, GLenum, access); \
-  UnsupportedWrapper1(void, glMakeImageHandleNonResidentARB, GLuint64, handle); \
   UnsupportedWrapper1(void, glMakeImageHandleNonResidentNV, GLuint64, handle); \
-  UnsupportedWrapper2(void, glMakeImageHandleResidentARB, GLuint64, handle, GLenum, access); \
   UnsupportedWrapper2(void, glMakeImageHandleResidentNV, GLuint64, handle, GLenum, access); \
   UnsupportedWrapper1(void, glMakeNamedBufferNonResidentNV, GLuint, buffer); \
   UnsupportedWrapper2(void, glMakeNamedBufferResidentNV, GLuint, buffer, GLenum, access); \
-  UnsupportedWrapper1(void, glMakeTextureHandleNonResidentARB, GLuint64, handle); \
   UnsupportedWrapper1(void, glMakeTextureHandleNonResidentNV, GLuint64, handle); \
-  UnsupportedWrapper1(void, glMakeTextureHandleResidentARB, GLuint64, handle); \
   UnsupportedWrapper1(void, glMakeTextureHandleResidentNV, GLuint64, handle); \
   UnsupportedWrapper6(void, glMap1d, GLenum, target, GLdouble, u1, GLdouble, u2, GLint, stride, GLint, order, const GLdouble *, points); \
   UnsupportedWrapper6(void, glMap1f, GLenum, target, GLfloat, u1, GLfloat, u2, GLint, stride, GLint, order, const GLfloat *, points); \
@@ -6378,7 +6380,7 @@
   UnsupportedWrapper6(void, glWriteMaskEXT, GLuint, res, GLuint, in, GLenum, outX, GLenum, outY, GLenum, outZ, GLenum, outW); \
 
 
-		
+        
 // the _renderdoc_hooked variants are to make sure we always have a function symbol exported that we
 // can return from GetProcAddress. On posix systems if another library (or the application itself)
 // creates a symbol called 'glEnable' we'll return the address of that, and break badly. Instead we

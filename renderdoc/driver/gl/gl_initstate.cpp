@@ -1890,6 +1890,7 @@ void GLResourceManager::Apply_InitialState(GLResource live, const GLInitialConte
   {
     ResourceId Id = GetID(live);
     WrappedOpenGL::TextureData &details = m_Driver->m_Textures[Id];
+    bool bindless = m_Driver->IsBindlessResource(Id);
 
     const TextureStateInitialData &state = initial.tex;
 
@@ -1904,27 +1905,30 @@ void GLResourceManager::Apply_InitialState(GLResource live, const GLInitialConte
       {
         int mips = GetNumMips(details.curType, tex, details.width, details.height, details.depth);
 
-        // we need to set maxlevel appropriately for number of mips to force the texture to be
-        // complete. This can happen if e.g. a texture is initialised just by default with
-        // glTexImage for level 0 and used as a framebuffer attachment, then the implementation is
-        // fine with it.
-        // Unfortunately glCopyImageSubData requires completeness across all mips, a stricter
-        // requirement :(.
-        // We set max_level to mips - 1 (so mips=1 means MAX_LEVEL=0). Then below where we set the
-        // texture state, the correct MAX_LEVEL is set to whatever the program had.
-        int maxlevel = mips - 1;
-        GL.glTextureParameterivEXT(live.name, details.curType, eGL_TEXTURE_MAX_LEVEL,
-                                   (GLint *)&maxlevel);
-
-        // set min/mag filters to NEAREST since we are doing an identity copy. Avoids issues where
-        // the spec says that e.g. integer or stencil textures cannot have a LINEAR filter
-        if(!ms)
+        if(!bindless)
         {
-          GLenum nearest = eGL_NEAREST;
-          GL.glTextureParameterivEXT(live.name, details.curType, eGL_TEXTURE_MIN_FILTER,
-                                     (GLint *)&nearest);
-          GL.glTextureParameterivEXT(live.name, details.curType, eGL_TEXTURE_MAG_FILTER,
-                                     (GLint *)&nearest);
+          // we need to set maxlevel appropriately for number of mips to force the texture to be
+          // complete. This can happen if e.g. a texture is initialised just by default with
+          // glTexImage for level 0 and used as a framebuffer attachment, then the implementation is
+          // fine with it.
+          // Unfortunately glCopyImageSubData requires completeness across all mips, a stricter
+          // requirement :(.
+          // We set max_level to mips - 1 (so mips=1 means MAX_LEVEL=0). Then below where we set the
+          // texture state, the correct MAX_LEVEL is set to whatever the program had.
+          int maxlevel = mips - 1;
+          GL.glTextureParameterivEXT(live.name, details.curType, eGL_TEXTURE_MAX_LEVEL,
+                                     (GLint *)&maxlevel);
+
+          // set min/mag filters to NEAREST since we are doing an identity copy. Avoids issues where
+          // the spec says that e.g. integer or stencil textures cannot have a LINEAR filter
+          if(!ms)
+          {
+            GLenum nearest = eGL_NEAREST;
+            GL.glTextureParameterivEXT(live.name, details.curType, eGL_TEXTURE_MIN_FILTER,
+                                       (GLint *)&nearest);
+            GL.glTextureParameterivEXT(live.name, details.curType, eGL_TEXTURE_MAG_FILTER,
+                                       (GLint *)&nearest);
+          }
         }
 
         bool iscomp = IsCompressedFormat(details.internalFormat);
@@ -2051,59 +2055,64 @@ void GLResourceManager::Apply_InitialState(GLResource live, const GLInitialConte
         }
       }
 
-      if((state.depthMode == eGL_DEPTH_COMPONENT || state.depthMode == eGL_STENCIL_INDEX) &&
-         HasExt[ARB_stencil_texturing])
-        GL.glTextureParameterivEXT(live.name, details.curType, eGL_DEPTH_STENCIL_TEXTURE_MODE,
-                                   (GLint *)&state.depthMode);
-
-      if((details.curType == eGL_TEXTURE_CUBE_MAP || details.curType == eGL_TEXTURE_CUBE_MAP_ARRAY) &&
-         HasExt[ARB_seamless_cubemap_per_texture])
-        GL.glTextureParameterivEXT(live.name, details.curType, eGL_TEXTURE_CUBE_MAP_SEAMLESS,
-                                   (GLint *)&state.seamless);
-
-      GL.glTextureParameterivEXT(live.name, details.curType, eGL_TEXTURE_BASE_LEVEL,
-                                 (GLint *)&state.baseLevel);
-      GL.glTextureParameterivEXT(live.name, details.curType, eGL_TEXTURE_MAX_LEVEL,
-                                 (GLint *)&state.maxLevel);
-
-      // assume that emulated (luminance, alpha-only etc) textures are not swizzled
-      if(!details.emulated && (HasExt[ARB_texture_swizzle] || HasExt[EXT_texture_swizzle]))
+      if(!bindless)
       {
-        SetTextureSwizzle(live.name, details.curType, state.swizzle);
-      }
+        if((state.depthMode == eGL_DEPTH_COMPONENT || state.depthMode == eGL_STENCIL_INDEX) &&
+           HasExt[ARB_stencil_texturing])
+          GL.glTextureParameterivEXT(live.name, details.curType, eGL_DEPTH_STENCIL_TEXTURE_MODE,
+                                     (GLint *)&state.depthMode);
 
-      if(!ms)
-      {
-        if(HasExt[EXT_texture_sRGB_decode])
-          GL.glTextureParameterivEXT(live.name, details.curType, eGL_TEXTURE_SRGB_DECODE_EXT,
-                                     (GLint *)&state.srgbDecode);
-        GL.glTextureParameterivEXT(live.name, details.curType, eGL_TEXTURE_COMPARE_FUNC,
-                                   (GLint *)&state.compareFunc);
-        GL.glTextureParameterivEXT(live.name, details.curType, eGL_TEXTURE_COMPARE_MODE,
-                                   (GLint *)&state.compareMode);
-        GL.glTextureParameterivEXT(live.name, details.curType, eGL_TEXTURE_MIN_FILTER,
-                                   (GLint *)&state.minFilter);
-        GL.glTextureParameterivEXT(live.name, details.curType, eGL_TEXTURE_MAG_FILTER,
-                                   (GLint *)&state.magFilter);
-        GL.glTextureParameterivEXT(live.name, details.curType, eGL_TEXTURE_WRAP_R,
-                                   (GLint *)&state.wrap[0]);
-        GL.glTextureParameterivEXT(live.name, details.curType, eGL_TEXTURE_WRAP_S,
-                                   (GLint *)&state.wrap[1]);
-        GL.glTextureParameterivEXT(live.name, details.curType, eGL_TEXTURE_WRAP_T,
-                                   (GLint *)&state.wrap[2]);
+        if((details.curType == eGL_TEXTURE_CUBE_MAP || details.curType == eGL_TEXTURE_CUBE_MAP_ARRAY) &&
+           HasExt[ARB_seamless_cubemap_per_texture])
+          GL.glTextureParameterivEXT(live.name, details.curType, eGL_TEXTURE_CUBE_MAP_SEAMLESS,
+                                     (GLint *)&state.seamless);
 
-        // see fetch in PrepareTextureInitialContents
-        if(HasExt[ARB_texture_border_clamp])
-          GL.glTextureParameterfvEXT(live.name, details.curType, eGL_TEXTURE_BORDER_COLOR,
-                                     state.border);
+        GL.glTextureParameterivEXT(live.name, details.curType, eGL_TEXTURE_BASE_LEVEL,
+                                   (GLint *)&state.baseLevel);
+        GL.glTextureParameterivEXT(live.name, details.curType, eGL_TEXTURE_MAX_LEVEL,
+                                   (GLint *)&state.maxLevel);
 
-        if(!IsGLES)
-          GL.glTextureParameterfvEXT(live.name, details.curType, eGL_TEXTURE_LOD_BIAS,
-                                     &state.lodBias);
-        if(details.curType != eGL_TEXTURE_RECTANGLE)
+        // assume that emulated (luminance, alpha-only etc) textures are not swizzled
+        if(!details.emulated && (HasExt[ARB_texture_swizzle] || HasExt[EXT_texture_swizzle]))
         {
-          GL.glTextureParameterfvEXT(live.name, details.curType, eGL_TEXTURE_MIN_LOD, &state.minLod);
-          GL.glTextureParameterfvEXT(live.name, details.curType, eGL_TEXTURE_MAX_LOD, &state.maxLod);
+          SetTextureSwizzle(live.name, details.curType, state.swizzle);
+        }
+
+        if(!ms)
+        {
+          if(HasExt[EXT_texture_sRGB_decode])
+            GL.glTextureParameterivEXT(live.name, details.curType, eGL_TEXTURE_SRGB_DECODE_EXT,
+                                       (GLint *)&state.srgbDecode);
+          GL.glTextureParameterivEXT(live.name, details.curType, eGL_TEXTURE_COMPARE_FUNC,
+                                     (GLint *)&state.compareFunc);
+          GL.glTextureParameterivEXT(live.name, details.curType, eGL_TEXTURE_COMPARE_MODE,
+                                     (GLint *)&state.compareMode);
+          GL.glTextureParameterivEXT(live.name, details.curType, eGL_TEXTURE_MIN_FILTER,
+                                     (GLint *)&state.minFilter);
+          GL.glTextureParameterivEXT(live.name, details.curType, eGL_TEXTURE_MAG_FILTER,
+                                     (GLint *)&state.magFilter);
+          GL.glTextureParameterivEXT(live.name, details.curType, eGL_TEXTURE_WRAP_R,
+                                     (GLint *)&state.wrap[0]);
+          GL.glTextureParameterivEXT(live.name, details.curType, eGL_TEXTURE_WRAP_S,
+                                     (GLint *)&state.wrap[1]);
+          GL.glTextureParameterivEXT(live.name, details.curType, eGL_TEXTURE_WRAP_T,
+                                     (GLint *)&state.wrap[2]);
+
+          // see fetch in PrepareTextureInitialContents
+          if(HasExt[ARB_texture_border_clamp])
+            GL.glTextureParameterfvEXT(live.name, details.curType, eGL_TEXTURE_BORDER_COLOR,
+                                       state.border);
+
+          if(!IsGLES)
+            GL.glTextureParameterfvEXT(live.name, details.curType, eGL_TEXTURE_LOD_BIAS,
+                                       &state.lodBias);
+          if(details.curType != eGL_TEXTURE_RECTANGLE)
+          {
+            GL.glTextureParameterfvEXT(live.name, details.curType, eGL_TEXTURE_MIN_LOD,
+                                       &state.minLod);
+            GL.glTextureParameterfvEXT(live.name, details.curType, eGL_TEXTURE_MAX_LOD,
+                                       &state.maxLod);
+          }
         }
       }
     }
@@ -2308,7 +2317,7 @@ void GLResourceManager::Apply_InitialState(GLResource live, const GLInitialConte
   {
     const SamplerInitialData &data = initial.samp;
 
-    if(data.valid)
+    if(data.valid && !m_Driver->IsBindlessResource(GetID(live)))
     {
       GLenum activeTexture = eGL_TEXTURE0;
       GL.glGetIntegerv(eGL_ACTIVE_TEXTURE, (GLint *)&activeTexture);

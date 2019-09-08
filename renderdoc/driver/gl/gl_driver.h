@@ -96,6 +96,9 @@ private:
 
   bool m_SuppressDebugMessages;
 
+  std::map<GLuint64, GLuint64> m_HandleRemap;
+  std::set<ResourceId> m_BindlessResources;
+
   GLResource GetResource(GLenum identifier, GLuint name);
 
   void DebugSnoop(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length,
@@ -577,6 +580,11 @@ public:
   GLuint GetCurrentDefaultFBO() { return m_CurrentDefaultFBO; }
   FrameRecord &GetFrameRecord() { return m_FrameRecord; }
   const APIEvent &GetEvent(uint32_t eventId);
+
+  bool IsBindlessResource(ResourceId id)
+  {
+    return m_BindlessResources.find(id) != m_BindlessResources.end();
+  }
 
   const DrawcallDescription &GetRootDraw() { return m_ParentDrawcall; }
   const DrawcallDescription *GetDrawcall(uint32_t eventId);
@@ -2456,6 +2464,19 @@ public:
   IMPLEMENT_FUNCTION_SERIALISED(void, glGetPerfQueryInfoINTEL, GLuint queryId,
                                 GLuint queryNameLength, GLchar *queryName, GLuint *dataSize,
                                 GLuint *noCounters, GLuint *noInstances, GLuint *capsMask);
+
+  // ARB_bindless_texture
+  IMPLEMENT_FUNCTION_SERIALISED(GLuint64, glGetTextureHandleARB, GLuint texture);
+  IMPLEMENT_FUNCTION_SERIALISED(GLuint64, glGetTextureSamplerHandleARB, GLuint texture,
+                                GLuint sampler);
+  IMPLEMENT_FUNCTION_SERIALISED(GLuint64, glGetImageHandleARB, GLuint texture, GLint level,
+                                GLboolean layered, GLint layer, GLenum format);
+  void glMakeTextureHandleResidentARB(GLuint64 handle);
+  void glMakeTextureHandleNonResidentARB(GLuint64 handle);
+  void glMakeImageHandleResidentARB(GLuint64 handle, GLenum access);
+  void glMakeImageHandleNonResidentARB(GLuint64 handle);
+  IMPLEMENT_FUNCTION_SERIALISED(void, glSetHandleRangeRDOC, GLuint buffer, GLuint64 offset,
+                                GLuint64 range);
 };
 
 class ScopedDebugContext

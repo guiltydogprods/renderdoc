@@ -177,7 +177,9 @@ bool FullyImplementedFunction(const char *funcname)
       !strcmp(funcname, "glGetDebugMessageLogKHR") || !strcmp(funcname, "glGetPointervKHR") ||
       !strcmp(funcname, "glPushDebugGroupKHR") || !strcmp(funcname, "glPopDebugGroupKHR") ||
       !strcmp(funcname, "glObjectLabelKHR") || !strcmp(funcname, "glGetObjectLabelKHR") ||
-      !strcmp(funcname, "glObjectPtrLabelKHR") || !strcmp(funcname, "glGetObjectPtrLabelKHR");
+      !strcmp(funcname, "glObjectPtrLabelKHR") || !strcmp(funcname, "glGetObjectPtrLabelKHR") ||
+      // ARB_bindless_texture.... sort of...
+      !strcmp(funcname, "glSetHandleRangeRDOC");
 }
 
 void *HookedGetProcAddress(const char *func, void *realFunc)
