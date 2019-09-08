@@ -6975,4 +6975,4 @@ INSTANTIATE_FUNCTION_SERIALISED(GLuint64, glGetTextureSamplerHandleARB, GLuint t
 INSTANTIATE_FUNCTION_SERIALISED(GLuint64, glGetImageHandleARB, GLuint texture, GLint level,
                                 GLboolean layered, GLint layer, GLenum format);
 INSTANTIATE_FUNCTION_SERIALISED(void, glSetHandleRangeRDOC, GLuint buffer, GLuint64 offset,
-                                GLuint64 range);
+                                GLuint64 range);
